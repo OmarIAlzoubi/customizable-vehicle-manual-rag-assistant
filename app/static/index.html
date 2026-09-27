@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111315">
+  <title>Vehicle Manual Assistant</title>
+  <style>
+    :root{color-scheme:dark;--bg:#111315;--panel:#1a1d20;--panel2:#22262a;--text:#f1f3f4;--muted:#a4abb2;--line:#343a40;--accent:#d83b46;--user:#292d32;--shadow:0 20px 60px #0005}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#33383c 0%,var(--bg) 55%);color:var(--text);font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh;display:flex;justify-content:center;padding:28px 16px}
+    .app{width:min(880px,100%);display:flex;flex-direction:column;min-height:calc(100vh - 56px)}header{display:flex;align-items:center;gap:14px;padding:8px 4px 22px}.mark{width:46px;height:46px;border:1px solid #5b3035;border-radius:15px;display:grid;place-items:center;color:#ff6a73;font-weight:850;letter-spacing:-2px;background:#281a1c;font-size:21px}.brand h1{font-size:17px;margin:0;font-weight:700}.brand p{margin:2px 0 0;color:var(--muted);font-size:12px}.pill{margin-left:auto;color:#ffc5c8;background:#321c20;border:1px solid #593038;padding:6px 10px;border-radius:999px;font-size:11px;white-space:nowrap}
+    main{flex:1;background:linear-gradient(180deg,#1b1e21f7,var(--panel) 25%);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;min-height:520px}.welcome{padding:56px 24px 30px;text-align:center}.welcome .eyebrow{color:#ff858c;text-transform:uppercase;letter-spacing:.14em;font-weight:700;font-size:11px}.welcome h2{font-size:clamp(26px,5vw,42px);line-height:1.12;letter-spacing:-.04em;margin:12px auto;max-width:650px}.welcome p{color:var(--muted);max-width:590px;margin:0 auto}.examples{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin-top:24px}.example{border:1px solid var(--line);color:#e5e7e9;background:#202428;border-radius:999px;padding:8px 12px;font:inherit;font-size:12px;cursor:pointer}.example:hover{border-color:#8b454b;background:#2b2325}
+    #messages{display:flex;flex-direction:column;gap:18px;padding:24px;overflow:auto;flex:1}.message{max-width:86%;border:1px solid var(--line);border-radius:18px;padding:14px 16px;white-space:pre-wrap;overflow-wrap:anywhere}.message.user{align-self:flex-end;background:var(--user);border-bottom-right-radius:5px}.message.assistant{align-self:flex-start;background:#202428;border-bottom-left-radius:5px}.message.error{border-color:#713c40;color:#ffc5c8}.message.pending{color:var(--muted)}.sources{margin-top:13px;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}.sources summary{cursor:pointer;color:#ff9da3;font-weight:650}.sources ol{padding-left:20px}.sources li{margin:10px 0}.sources b{color:#eceeef}.sources p{margin:4px 0;white-space:pre-wrap}.empty{display:none}
+    form{display:flex;align-items:flex-end;gap:10px;padding:14px;border-top:1px solid var(--line);background:#17191b}.input-wrap{flex:1;display:flex;align-items:center;border:1px solid #3b4146;background:#202428;border-radius:17px;padding:4px 12px 4px 16px}.input-wrap:focus-within{border-color:#a94a52;box-shadow:0 0 0 3px #d83b461f}textarea{width:100%;resize:none;max-height:140px;min-height:42px;padding:10px 0;border:0;outline:none;color:var(--text);background:transparent;font:inherit}textarea::placeholder{color:#858c92}.send{flex:none;width:44px;height:44px;border:0;border-radius:14px;background:var(--accent);color:white;font-size:21px;cursor:pointer}.send:disabled{opacity:.45;cursor:wait}.hint{color:#7f878d;text-align:center;font-size:11px;padding:0 16px 13px}footer{text-align:center;padding:14px;color:#838a90;font-size:11px}
+    @media(max-width:600px){body{padding:0}.app{min-height:100dvh}.app header{padding:18px 16px}.pill{font-size:10px}.main{border-radius:0}main{border-radius:0;border-left:0;border-right:0;min-height:0}.welcome{padding:42px 18px 24px}#messages{padding:18px 14px}.message{max-width:94%}form{padding:11px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="mark" aria-hidden="true">V</div>
+      <div class="brand"><h1 id="vehicle-title">Vehicle Manual Assistant</h1><p id="vehicle-subtitle">Answers grounded in your vehicle documents</p></div>
+      <div class="pill">GROK · HYBRID SEARCH</div>
+    </header>
+    <main>
+      <section class="welcome" id="welcome">
+        <div class="eyebrow">Your documents, easier to ask</div>
+        <h2 id="welcome-title">Your vehicle documents, easier to ask.</h2>
+        <p id="welcome-description">Ask about features, maintenance, or driving. The assistant searches your indexed documents and shows the pages behind its answer.</p>
+        <div class="examples">
+          <button class="example" type="button">How do I reset the tire pressure warning?</button>
+          <button class="example" type="button">What maintenance is due at my current mileage?</button>
+          <button class="example" type="button">How do I check the engine oil?</button>
+        </div>
+      </section>
+      <section id="messages" aria-live="polite" aria-label="Conversation"></section>
+      <form id="ask-form">
+        <div class="input-wrap"><textarea id="question" rows="1" maxlength="2000" placeholder="Ask a question about your car…" aria-label="Your question" required></textarea></div>
+        <button class="send" id="send" aria-label="Send question" title="Send">↑</button>
+      </form>
+      <div class="hint">Enter to send · Shift+Enter for a new line</div>
+    </main>
+    <footer>AI-generated answers can be incomplete. Check the cited page in your official vehicle documentation.</footer>
+  </div>
+  <script>
+    const form = document.querySelector('#ask-form');
+    const input = document.querySelector('#question');
+    const messages = document.querySelector('#messages');
+    const welcome = document.querySelector('#welcome');
+    const send = document.querySelector('#send');
+
+    fetch('/api/health').then(response => response.ok ? response.json() : null).then(data => {
+      if (!data?.vehicle_name) return;
+      const vehicle = data.vehicle_name;
+      document.title = `${vehicle} Manual Assistant`;
+      document.querySelector('#vehicle-title').textContent = `${vehicle} Manual Assistant`;
+      document.querySelector('#vehicle-subtitle').textContent = `Answers grounded in the ${vehicle} documents you indexed`;
+      document.querySelector('#welcome-title').textContent = `Ask about your ${vehicle}.`;
+      document.querySelector('#welcome-description').textContent = `Get clear, source-linked answers from your indexed ${vehicle} manuals and reference documents.`;
+    }).catch(() => {});
+
+    function addMessage(role, text, sources = []) {
+      const bubble = document.createElement('article');
+      bubble.className = `message ${role}`;
+      bubble.textContent = text;
+      if (sources.length) {
+        const details = document.createElement('details');
+        details.className = 'sources';
+        const summary = document.createElement('summary');
+        summary.textContent = `Sources (${sources.length})`;
+        const list = document.createElement('ol');
+        for (const source of sources) {
+          const item = document.createElement('li');
+          const title = document.createElement('b');
+          const page = source.page_start === source.page_end ? `${source.page_start}` : `${source.page_start}–${source.page_end}`;
+          title.textContent = `[${source.label}] ${source.filename}, p. ${page}`;
+          const excerpt = document.createElement('p');
+          excerpt.textContent = source.excerpt || '';
+          item.append(title, excerpt);
+          list.append(item);
+        }
+        details.append(summary, list);
+        bubble.append(details);
+      }
+      messages.append(bubble);
+      messages.scrollTop = messages.scrollHeight;
+      return bubble;
+    }
+
+    async function ask(question) {
+      const response = await fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.detail || `Request failed (${response.status})`);
+      return body;
+    }
+
+    async function submitQuestion(question) {
+      const q = question.trim();
+      if (!q || send.disabled) return;
+      welcome.style.display = 'none';
+      addMessage('user', q);
+      input.value = '';
+      input.style.height = '42px';
+      send.disabled = true;
+      const pending = addMessage('assistant pending', 'Searching the documents and preparing an answer…');
+      try {
+        const result = await ask(q);
+        pending.remove();
+        addMessage('assistant', result.answer, result.sources || []);
+      } catch (error) {
+        pending.remove();
+        addMessage('error', error.message);
+      } finally {
+        send.disabled = false;
+        input.focus();
+      }
+    }
+
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      submitQuestion(input.value);
+    });
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+    input.addEventListener('input', () => {
+      input.style.height = '42px';
+      input.style.height = `${Math.min(input.scrollHeight, 140)}px`;
+    });
+    document.querySelectorAll('.example').forEach(button => {
+      button.addEventListener('click', () => submitQuestion(button.textContent));
+    });
+  </script>
+</body>
+</html>
